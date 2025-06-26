@@ -16,27 +16,59 @@ public class AccountController :Controller
         _userManager = userManager;
     }
     
-    [HttpPost]
-    public IActionResult Login([FromForm] LoginVM model)
+    [HttpGet]
+    public IActionResult Login(string? returnUrl)
     {
-        
+        ViewBag.ReturnUrl = returnUrl;
+        return View();
+    } 
+    
+    [HttpPost()]
+    //[Route("")]
+    
+    
+    public async Task<IActionResult> Login( [FromForm] LoginVM model, [FromQuery(Name = "ReturnUrl")]string? returnUrl)
+    {
+        ViewBag.ReturnUrl = returnUrl;
+        returnUrl = returnUrl ?? Url.Content("~/");
+        if (ModelState.IsValid)
+        {
+            var res = _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe, false);
+            if (res.Result.Succeeded)
+            {
+               
+                return RedirectToAction(returnUrl);
+            }
+        }
         return View();
     }
     
-    public IActionResult Login()
+    [HttpGet]
+    public IActionResult Register()
     {
         return View();
     }
 
     [HttpPost]
-    public IActionResult Register([FromForm] RegisterVM model)
+    public async Task<IActionResult> Register([FromForm] RegisterVM model)
     {
-        
-        return View();
+        if (ModelState.IsValid)
+        {
+            AppUser user = new AppUser
+            {
+                EmailConfirmed = true,
+                UserName = model.Email,
+                Email = model.Email
+            };
+            var result = _userManager.CreateAsync(user, model.Password).Result;
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Login", "Account", model);
+            }
+        }
+
+        return RedirectToAction("~/");
     }
      
-    public IActionResult Register()
-    {
-        return View();
-    }
+
 }
