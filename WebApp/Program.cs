@@ -23,10 +23,10 @@ public class Program
 
 
         builder.Services.AddIdentityCore<AppUser>()
-  //          .AddRoleManager<AppRoleManager>()
             .AddUserManager<AppUserManager>()
             .AddSignInManager<AppSignInManager>()
-            .AddRoles<AppRole>()
+            .AddRoles<AppRole>() 
+            .AddRoleManager<AppRoleManager>()
             .AddEntityFrameworkStores<AppDbContext>();
 
         builder.Services.Configure<IdentityOptions>(options =>
