@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebApp.Data;
@@ -21,6 +22,13 @@ public class Program
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(connStr));
 
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(options =>
+            {
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+                options.SlidingExpiration = true;
+                options.LoginPath = "/Account/Login";
+            });
 
         builder.Services.AddIdentityCore<AppUser>()
             .AddUserManager<AppUserManager>()
@@ -47,7 +55,7 @@ public class Program
 
         });
 
-        builder.Services.AddAuthentication();
+
 
         builder.Services.AddAuthorization(options => {
             options.AddPolicy("RequireModerator",
@@ -81,6 +89,7 @@ public class Program
         app.UseRouting();
 
         app.UseAuthorization();
+       
 
         app.MapControllerRoute(
             name: "default",
