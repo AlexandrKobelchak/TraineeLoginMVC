@@ -33,14 +33,18 @@ public class AccountController :Controller
         returnUrl = returnUrl ?? Url.Content("~/");
         if (ModelState.IsValid)
         {
-            var res = _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe, false);
-            if (res.Result.Succeeded)
+            
+            
+            var res = await Task.Run(() =>
+                _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe, false));
+            
+            if (res.Succeeded)
             {
                
                 return RedirectToAction(returnUrl);
             }
         }
-        return View();
+        return RedirectToAction("Index", "Home");
     }
     
     [HttpGet]
@@ -56,6 +60,7 @@ public class AccountController :Controller
         {
             AppUser user = new AppUser
             {
+                
                 EmailConfirmed = true,
                 UserName = model.Email,
                 Email = model.Email
@@ -63,11 +68,11 @@ public class AccountController :Controller
             var result = _userManager.CreateAsync(user, model.Password).Result;
             if (result.Succeeded)
             {
-                return RedirectToAction("Login", "Account", model);
+                return RedirectToAction("Login", "Account", new LoginVM{Username = model.Email, Password = model.Password});
             }
         }
 
-        return RedirectToAction("~/");
+        return RedirectToAction("Index", "Home");
     }
      
 

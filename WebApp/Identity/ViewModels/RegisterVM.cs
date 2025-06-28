@@ -16,4 +16,6 @@ public class RegisterVM
     
     [Compare("Password", ErrorMessage = "Password dont match.")] 
     public string? ConfirmPassword { get; set; }
+    
+    
 }
