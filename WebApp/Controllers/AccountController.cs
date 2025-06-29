@@ -1,8 +1,4 @@
-using System.Security.Policy;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using WebApp.Identity;
 using WebApp.Identity.ViewModels;
 
@@ -49,14 +45,19 @@ public class AccountController : Controller
     }
     
     [HttpGet]
-    public IActionResult Register()
+    public IActionResult Register(string? returnUrl)
     {
+        ViewBag.ReturnUrl = returnUrl;
         return View();
     }
 
     [HttpPost]
-    public async Task<IActionResult> Register([FromForm] RegisterVM model)
+    public async Task<IActionResult> Register([FromForm] RegisterVM model, [FromQuery(Name = "ReturnUrl")]string? returnUrl )
     {
+        ViewBag.ReturnUrl = returnUrl;
+        returnUrl = returnUrl ?? "~/";
+        returnUrl = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + Url.Content(returnUrl);
+        
         if (ModelState.IsValid)
         {
             AppUser user = new AppUser
@@ -68,12 +69,18 @@ public class AccountController : Controller
                 Address = model.Address,
                 
             };
-            var result = _userManager.CreateAsync(user, model.Password).Result;
+            var result = _userManager.CreateAsync(user, model.Password!).Result;
             if (result.Succeeded)
             {
-                //return RedirectToAction("Login", "Account", new LoginVM{Username = model.Email, Password = model.Password});
+                // return View("Login", new LoginVM{Username = model.Email, Password = model.Password});
                 
-                return View("Login", new LoginVM{Username = model.Email, Password = model.Password});
+                var res = await Task.Run(() =>
+                    _signInManager.PasswordSignInAsync(model.Email!, model.Password!, false, false));
+
+                if (res.Succeeded)
+                {
+                    return Redirect(returnUrl);
+                }
             }
         }
         return RedirectToAction("Index", "Home");
@@ -84,5 +91,11 @@ public class AccountController : Controller
     {
         await _signInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
-    } 
+    }
+
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
 }

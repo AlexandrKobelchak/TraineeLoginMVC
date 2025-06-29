@@ -29,7 +29,8 @@
             </div>
             <div class="row">
                 <div class="col-8">
-                    <a asp-action="Register" 
+                    <a asp-action="Register"
+                       asp-route-returnUrl="@ViewData["ReturnUrl"]"
                        class="text-decoration-none 
                     float-start mt-2">Can`t have account?</a>
                 </div>
