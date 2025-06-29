@@ -1,5 +1,8 @@
+using System.Security.Policy;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using WebApp.Identity;
 using WebApp.Identity.ViewModels;
 
@@ -30,6 +33,8 @@ public class AccountController : Controller
     {
         ViewBag.ReturnUrl = returnUrl;
         returnUrl = returnUrl ?? Url.Content("~/");
+        returnUrl = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + Url.Content(returnUrl);
+        
         if (ModelState.IsValid)
         {
             var res = await Task.Run(() =>
@@ -37,7 +42,7 @@ public class AccountController : Controller
                 
             if (res.Succeeded)
             {
-                return RedirectToAction("Index", "Home"); //returnUrl);
+                return Redirect(returnUrl);
             }
         }
         return RedirectToAction("Index", "Home");
@@ -80,5 +85,4 @@ public class AccountController : Controller
         await _signInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     } 
-
 }
