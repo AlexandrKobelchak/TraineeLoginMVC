@@ -5,15 +5,17 @@ using WebApp.Identity.ViewModels;
 
 namespace WebApp.Controllers;
 
-public class AccountController :Controller
+public class AccountController : Controller
 {
-    private readonly SignInManager<AppUser> _signInManager;
-    private readonly UserManager<AppUser> _userManager;
+    private readonly ILogger<HomeController> _logger;
+    private readonly AppSignInManager _signInManager;
+    private readonly AppUserManager _userManager;
 
-    public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager)
+    public AccountController(ILogger<HomeController> logger, AppSignInManager signInManager, AppUserManager userManager)
     {
         _signInManager = signInManager;
         _userManager = userManager;
+        _logger=logger;
     }
     
     [HttpGet]
@@ -24,24 +26,18 @@ public class AccountController :Controller
     } 
     
     [HttpPost()]
-    //[Route("")]
-    
-    
-    public async Task<IActionResult> Login( [FromForm] LoginVM model, [FromQuery(Name = "ReturnUrl")]string? returnUrl)
+    public async Task<IActionResult> Login( [FromForm] LoginVM model, [FromQuery(Name = "ReturnUrl")]string? returnUrl )
     {
         ViewBag.ReturnUrl = returnUrl;
         returnUrl = returnUrl ?? Url.Content("~/");
         if (ModelState.IsValid)
         {
-            
-            
             var res = await Task.Run(() =>
-                _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberMe, false));
-            
+                _signInManager.PasswordSignInAsync(model.Username!, model.Password!, model.RememberMe, false));
+                
             if (res.Succeeded)
             {
-               
-                return RedirectToAction(returnUrl);
+                return RedirectToAction("Index", "Home"); //returnUrl);
             }
         }
         return RedirectToAction("Index", "Home");
@@ -60,20 +56,29 @@ public class AccountController :Controller
         {
             AppUser user = new AppUser
             {
-                
+                NicName = model.Name!,
                 EmailConfirmed = true,
                 UserName = model.Email,
-                Email = model.Email
+                Email = model.Email,
+                Address = model.Address,
+                
             };
             var result = _userManager.CreateAsync(user, model.Password).Result;
             if (result.Succeeded)
             {
-                return RedirectToAction("Login", "Account", new LoginVM{Username = model.Email, Password = model.Password});
+                //return RedirectToAction("Login", "Account", new LoginVM{Username = model.Email, Password = model.Password});
+                
+                return View("Login", new LoginVM{Username = model.Email, Password = model.Password});
             }
         }
-
         return RedirectToAction("Index", "Home");
     }
      
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return RedirectToAction("Index", "Home");
+    } 
 
 }

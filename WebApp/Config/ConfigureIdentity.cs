@@ -2,9 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using WebApp.Data;
 using WebApp.Identity;
 
-namespace WebApp.Config;
-
-public static partial class Configurator
+public static partial class Program
 {
     public static WebApplicationBuilder ConfigureIdentity(this WebApplicationBuilder builder)
     {
@@ -15,6 +13,23 @@ public static partial class Configurator
             .AddRoleManager<AppRoleManager>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+        
+        builder.Services.Configure<IdentityOptions>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = false;  
+
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequiredLength = 6;
+            options.Password.RequiredUniqueChars = 1;
+
+            // Lockout settings.
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
+        });
        
         return builder;
     }

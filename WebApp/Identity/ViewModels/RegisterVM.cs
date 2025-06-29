@@ -12,10 +12,16 @@ public class RegisterVM
     public string?  Email { get; set; }
     
     [Required] 
+    [DataType(DataType.Password)]
     public string?  Password { get; set; }
     
+    [Required] 
+    [DataType(DataType.Password)]
     [Compare("Password", ErrorMessage = "Password dont match.")] 
     public string? ConfirmPassword { get; set; }
-    
+   
+    [StringLength(260)]
+    [DataType(DataType.MultilineText)]
+    public string? Address { get; set; }    
     
 }

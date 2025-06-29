@@ -10,7 +10,7 @@
     <div class="col-md-3 card p-3">
         <h2 class="text-center text-info">Login</h2>
         <form asp-action="Login" method="post" role="form"  asp-route-returnurl="@ViewData["ReturnUrl"]">
-            <div asp-validation-summary="ModelOnly"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="mb-1">
                 <label asp-for="Username" class="control-label"></label>
                 <input asp-for="Username" class="form-control" />
@@ -24,6 +24,7 @@
             <div class="mb-1 form-check">
                 <label class="form-check-label">
                     <input asp-for="RememberMe" class="form-check-input" />
+                    @Html.DisplayNameFor(a=>a.RememberMe)
                 </label>
             </div>
             <div class="row">
@@ -39,3 +40,9 @@
         </form>
     </div>
 </div>
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

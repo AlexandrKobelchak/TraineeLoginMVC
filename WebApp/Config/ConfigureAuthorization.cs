@@ -1,4 +1,4 @@
-public static partial class Configurator
+public static partial class Program
 {
 
     public static WebApplicationBuilder ConfigureAuthorization(this WebApplicationBuilder builder)
