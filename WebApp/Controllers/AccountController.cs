@@ -24,24 +24,20 @@ public class AccountController : Controller
         return View();
     } 
     
-    [HttpPost()]
-    public async Task<IActionResult> Login( [FromForm] LoginVM model, [FromQuery(Name = "ReturnUrl")]string? returnUrl )
+    [HttpPost]
+    public async Task<IActionResult> Login([FromForm] LoginVM model, [FromQuery] string? returnUrl)
     {
-        ViewBag.ReturnUrl = returnUrl;
-        returnUrl = returnUrl ?? Url.Content("~/");
-        returnUrl = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + Url.Content(returnUrl);
-        
         if (ModelState.IsValid)
         {
             var res = await Task.Run(() =>
                 _signInManager.PasswordSignInAsync(model.Username!, model.Password!, model.RememberMe, false));
-                
+
             if (res.Succeeded)
             {
-                return Redirect(returnUrl);
+                return Redirect(returnUrl ?? Url.Content("~/"));
             }
         }
-        return RedirectToAction("Index", "Home");
+        return View("Login", model);
     }
     
     [HttpGet]
@@ -52,12 +48,9 @@ public class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Register([FromForm] RegisterVM model, [FromQuery(Name = "ReturnUrl")]string? returnUrl )
+    public async Task<IActionResult> Register([FromForm] RegisterVM model,
+        [FromQuery] string? returnUrl)
     {
-        ViewBag.ReturnUrl = returnUrl;
-        returnUrl = returnUrl ?? "~/";
-        returnUrl = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + Url.Content(returnUrl);
-        
         if (ModelState.IsValid)
         {
             AppUser user = new AppUser
@@ -67,23 +60,20 @@ public class AccountController : Controller
                 UserName = model.Email,
                 Email = model.Email,
                 Address = model.Address,
-                
+
             };
             var result = _userManager.CreateAsync(user, model.Password!).Result;
             if (result.Succeeded)
             {
-                // return View("Login", new LoginVM{Username = model.Email, Password = model.Password});
-                
-                var res = await Task.Run(() =>
-                    _signInManager.PasswordSignInAsync(model.Email!, model.Password!, false, false));
+                var res = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, false, false);
 
                 if (res.Succeeded)
                 {
-                    return Redirect(returnUrl);
+                    return Redirect(returnUrl ?? Url.Content("~/"));
                 }
             }
         }
-        return RedirectToAction("Index", "Home");
+        return View("Register", model);
     }
      
     [HttpGet]
