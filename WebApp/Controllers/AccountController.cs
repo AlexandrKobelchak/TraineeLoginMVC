@@ -1,6 +1,9 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using WebApp.Identity;
 using WebApp.Identity.ViewModels;
+using WebApp.Models;
 
 namespace WebApp.Controllers;
 
@@ -93,6 +96,82 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+        [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordVM vm)
+    {
+        if (!ModelState.IsValid) return View("ForgotPassword", vm);
+
+        var user = await _userManager.FindByEmailAsync(vm.Email);
+        if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        {
+            ModelState.AddModelError("Email", "Invalid email address or email no confirmed");
+            return View("ForgotPassword", vm);
+        }
+
+        var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        Console.WriteLine(code);
+
+        return RedirectToAction("ForgotPasswordConfirmation");
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPasswordConfirmation()
+    {
+        return View();
+    }
+
+
+    [HttpGet]
+    public IActionResult ResetPassword(
+        [FromQuery] string? code)
+    {
+        if (code == null)
+            return BadRequest("Код сброса или email отсутствует.");
+
+        var model = new ResetPasswordVM
+        {
+            Code = code
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ResetPassword(
+        [FromForm] ResetPasswordVM model)
+    {
+        if (!ModelState.IsValid) return View("ResetPassword", model);
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            ModelState.AddModelError("Email", "Account with this email address not found");
+            return View("ResetPassword", model);
+        }
+        string decodedCode = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Code));
+        var result = await _userManager.ResetPasswordAsync(user, decodedCode, model.Password);
+        if (result.Succeeded)
+        {
+            return RedirectToAction("ResetPasswordConfirmation");
+        }
+        foreach (var error in result.Errors)
+            ModelState.AddModelError(string.Empty, error.Description);
+
+        return View();
+    }
+    
+    public IActionResult ResetPasswordConfirmation()
+    {
+        return View();
+    }
+    
     [HttpGet]
     public IActionResult AccessDenied()
     {
